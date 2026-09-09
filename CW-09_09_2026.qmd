@@ -1,0 +1,26 @@
+---
+title: "DS-301-01-1_09_09_26"
+format: html
+editor: visual
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Loading Libraries
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+```
+
+You can add options to executable code like this
+
+```{r}
+df = read.csv("HT_2013-2025.csv")
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
