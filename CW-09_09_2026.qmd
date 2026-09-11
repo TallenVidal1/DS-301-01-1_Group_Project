@@ -15,12 +15,35 @@ When you click the **Render** button a document will be generated that includes 
 ```{r}
 library(tidyverse)
 library(ggplot2)
+library(dplyr)
 ```
-
-You can add options to executable code like this
 
 ```{r}
 df = read.csv("HT_2013-2025.csv")
 ```
 
-The `echo: false` option disables the printing of code (only output is displayed).
+```{r}
+#number of each sub offense
+ggplot(data=df, aes(x = OFFENSE_SUBCAT_NAME, fill = ACTUAL_COUNT))+
+geom_bar()
+
+```
+
+```{r}
+df %>%
+  count(DATA_YEAR) %>%
+  ggplot(aes(x = reorder(DATA_YEAR, -n), y = n)) +
+  geom_col() +
+  labs(x = "Year", y = "Count", title = "recorded incidents per year") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r}
+#number of reports in each state
+df %>%
+  count(STATE_NAME) %>%
+  ggplot(aes(x = reorder(STATE_NAME, -n), y = n)) +
+  geom_col() +
+  labs(x = "State Name", y = "Count", title = "Frequency of State") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
