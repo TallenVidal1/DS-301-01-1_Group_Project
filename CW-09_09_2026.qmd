@@ -52,6 +52,21 @@ df %>%
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
+## Plot 4 - Subcategory
+
+```{r}
+# SUBCATEGORY -- stacked bar by year
+df |> 
+  group_by(DATA_YEAR, OFFENSE_SUBCAT_NAME) |> 
+  summarise(offenses = sum(ACTUAL_COUNT), .groups = "drop") |> 
+  ggplot(aes(x = factor(DATA_YEAR), y = offenses, fill = OFFENSE_SUBCAT_NAME)) +
+  geom_col() +
+  labs(title = "Offenses by year and subcategory",
+       x = "Year", y = "Offenses", fill = "Subcategory") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
 ## Analysis:
 
 ```{r}
