@@ -82,8 +82,11 @@ summary(model)
 ```
 
 ```{r}
+#| fig-width: 10
+#| fig-height: 6
 ggplot(state_df, aes(x = STATE_ABBR, y = COUNT, color = OFFENSE_SUBCAT_NAME)) +
-  geom_jitter() +
+  geom_jitter(width = .1, alpha = .5) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
   geom_smooth(method = "lm") +
   stat_cor()
 ```
