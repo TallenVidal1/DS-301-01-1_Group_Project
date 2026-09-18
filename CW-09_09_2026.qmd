@@ -55,5 +55,13 @@ df %>%
 ## Analysis:
 
 ```{r}
+# 1. Prepare sample data
+# Already using df #
+
+# 2. Fit the linear model
+model <- lm(y ~ x, data = df)
+
+# 3. View the regression coefficients and statistical summary
+summary(model)
 
 ```
