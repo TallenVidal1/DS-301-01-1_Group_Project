@@ -1,0 +1,118 @@
+---
+title: "EDA — [your project name]"
+author: "[group members]"
+date: today
+format:
+  html:
+    toc: true
+    embed-resources: true
+    fig-width: 7
+    fig-height: 4.5
+editor: visual
+---
+
+```{r}
+#| label: setup
+#| message: false
+#| warning: false
+
+library(tidyverse)
+
+# Load your data here. 
+
+# dat <- read_csv("your_file.csv")
+```
+
+## What we have
+
+Replace this with: how many rows, how many columns, and whether the row count matches what the documentation says. If it doesn't match, say so. That's a finding to observe, not a problem to hide.
+
+```{r}
+#| label: dimensions
+
+# dim(dat)
+# glimpse(dat)
+```
+
+------------------------------------------------------------------------
+
+## Example
+
+*This section is a model. Delete it before you submit.*
+
+```{r}
+#| label: fig-example
+#| echo: true
+
+ggplot(mpg, aes(x = hwy)) +
+  geom_histogram(binwidth = 2) +
+  labs(x = "Highway MPG", y = "Number of vehicles") +
+  theme_minimal()
+```
+
+**Figure 0.** Distribution of highway fuel economy across 234 vehicle models, 1999–2008.
+
+The distribution is right-skewed with a long upper tail, so the median (24 mpg) describes a typical vehicle better than the mean (23.4 mpg pulled toward the outliers). There's a small cluster above 40 mpg that is worth checking . Those may be a distinct vehicle class rather than extreme values of the same group. This describes only the models in this dataset, which is not a random sample of vehicles on the road.
+
+> Notice what the interpretation does: names the shape, justifies the summary choice, flags something to follow up on, and scopes the claim. Yours should do the same things.
+
+------------------------------------------------------------------------
+
+## Figure 1: (list variables)
+
+```{r}
+#| label: fig-one
+
+```
+
+**Figure 1.** *Caption here: what the reader is looking at, including n and any exclusions.*
+
+*Interpretation here: 2–3 sentences. What do you see? What does it NOT show?*
+
+## Figure 2: (list variables)
+
+```{r}
+#| label: fig-two
+
+```
+
+**Figure 2.** *Caption.*
+
+*Interpretation.*
+
+## Figure 3: (list variables)
+
+```{r}
+#| label: fig-three
+
+```
+
+**Figure 3.** *Caption.*
+
+*Interpretation.*
+
+## One column, one instrument
+
+Pick one column and answer in prose:
+
+- **Column:**
+- **What produced this number** (what instrument, question, sensor, or process):
+- **What construct it was meant to capture:**
+- **What you'd check to be sure** (usually the codebook...name the page if you found it):
+
+# Optional: Starting analysis
+
+Only if you're ready. Fill these in *before* running anything.
+
+**What we expect:** *We expect \_\_\_ to be higher/lower in \_\_\_ than , because \_\_* .
+
+**What would change our mind:** *If we see \_\_\_, our expectation was wrong, and \_\_\_.*
+
+```{r}
+#| label: analysis
+
+
+
+```
+
+**What we found** (including if it was nothing! A predicted null is still soemthing to talk about):
