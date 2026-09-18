@@ -4,9 +4,7 @@ format: html
 editor: visual
 ---
 
-## Quarto
-
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+## EDA for Comp Sci Plus One
 
 ## Loading Libraries
 
@@ -46,4 +44,10 @@ df %>%
   geom_col() +
   labs(x = "State Name", y = "Count", title = "Frequency of State") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+## Analysis:
+
+```{r}
+
 ```
