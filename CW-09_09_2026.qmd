@@ -14,6 +14,10 @@ When you click the **Render** button a document will be generated that includes 
 library(tidyverse)
 library(ggplot2)
 library(dplyr)
+library(bayesrules)
+library(ggpubr)
+library(plotly)
+library(report)
 ```
 
 ```{r}
@@ -73,10 +77,47 @@ df |>
 # 1. Prepare sample data
 # Already using df #
 
+levels(df$OFFENSE_SUBCAT_NAME)
+class(df$OFFENSE_SUBCAT_NAME)
+
+df$OFFENSE_SUBCAT_NAME_F <- as.factor(df$OFFENSE_SUBCAT_NAME)
+class(df$OFFENSE_SUBCAT_NAME_F)
+levels(df$OFFENSE_SUBCAT_NAME_F)
+
 # 2. Fit the linear model
-model <- lm(y ~ x, data = df)
+model <- lm(ACTUAL_COUNT ~ OFFENSE_SUBCAT_NAME, data = df)
 
 # 3. View the regression coefficients and statistical summary
 summary(model)
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```
+
+```{r}
+ggplot(df, aes(x = OFFENSE_SUBCAT_NAME, y = ACTUAL_COUNT)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  stat_cor()
+
+ggplot(df, aes(x = OFFENSE_SUBCAT_NAME, y = ACTUAL_COUNT)) +
+  geom_boxplot() +
+  geom_jitter(width = 0.2, alpha = 0.5) +
+  geom_smooth(method = "lm") +
+  stat_cor()
 ```
