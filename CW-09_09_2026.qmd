@@ -76,7 +76,7 @@ df |>
 ```{r}
 state_df <- df %>% 
   group_by(STATE_ABBR, OFFENSE_SUBCAT_NAME) %>%
-summarise(COUNT = sum(ACTUAL_COUNT), .groups = 'drop')
+summarise(COUNT = sum(ACTUAL_COUNT), .groups = 'keep')
 model <- lm(COUNT ~ OFFENSE_SUBCAT_NAME + STATE_ABBR, data = state_df)
 summary(model)
 ```
@@ -85,6 +85,25 @@ summary(model)
 #| fig-width: 10
 #| fig-height: 6
 ggplot(state_df, aes(x = STATE_ABBR, y = COUNT, color = OFFENSE_SUBCAT_NAME)) +
+  geom_jitter(width = .1, alpha = .5) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  geom_smooth(method = "lm") +
+  stat_cor()
+```
+
+```{r}
+year_df <- df %>% 
+  group_by(DATA_YEAR, OFFENSE_SUBCAT_NAME) %>%
+  summarise(COUNT = sum(ACTUAL_COUNT), .groups = 'keep')
+model <- lm(COUNT ~ OFFENSE_SUBCAT_NAME + DATA_YEAR, data = year_df)
+summary(model)
+
+```
+
+```{r}
+#| fig-width: 10
+#| fig-height: 6
+ggplot(year_df, aes(x = DATA_YEAR, y = COUNT, color = OFFENSE_SUBCAT_NAME)) +
   geom_jitter(width = .1, alpha = .5) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
   geom_smooth(method = "lm") +
