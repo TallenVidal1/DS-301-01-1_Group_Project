@@ -74,6 +74,21 @@ df |>
 ## Analysis:
 
 ```{r}
+state_df <- df %>% 
+  group_by(STATE_ABBR, OFFENSE_SUBCAT_NAME) %>%
+summarise(COUNT = sum(ACTUAL_COUNT), .groups = 'drop')
+model <- lm(COUNT ~ OFFENSE_SUBCAT_NAME + STATE_ABBR, data = state_df)
+summary(model)
+```
+
+```{r}
+ggplot(state_df, aes(x = STATE_ABBR, y = COUNT, color = OFFENSE_SUBCAT_NAME)) +
+  geom_jitter() +
+  geom_smooth(method = "lm") +
+  stat_cor()
+```
+
+```{r}
 # 1. Prepare sample data
 # Already using df #
 
