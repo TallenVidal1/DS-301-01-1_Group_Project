@@ -20,12 +20,16 @@ library(dplyr)
 df = read.csv("HT_2013-2025.csv")
 ```
 
+## Plot 1
+
 ```{r}
 #number of each sub offense
 ggplot(data=df, aes(x = OFFENSE_SUBCAT_NAME, fill = ACTUAL_COUNT))+
 geom_bar()
 
 ```
+
+## Plot 2
 
 ```{r}
 df %>%
@@ -35,6 +39,8 @@ df %>%
   labs(x = "Year", y = "Count", title = "recorded incidents per year") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
+
+## Plot 3
 
 ```{r}
 #number of reports in each state
