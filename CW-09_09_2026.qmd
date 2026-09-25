@@ -110,6 +110,8 @@ ggplot(year_df, aes(x = DATA_YEAR, y = COUNT, color = OFFENSE_SUBCAT_NAME)) +
   stat_cor()
 ```
 
+## Analysis Caption:
+
 ```{r}
 # 1. Prepare sample data
 # Already using df #
@@ -127,23 +129,6 @@ model <- lm(ACTUAL_COUNT ~ OFFENSE_SUBCAT_NAME, data = df)
 # 3. View the regression coefficients and statistical summary
 summary(model)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ```
 
 ```{r}
@@ -158,3 +143,7 @@ ggplot(df, aes(x = OFFENSE_SUBCAT_NAME, y = ACTUAL_COUNT)) +
   geom_smooth(method = "lm") +
   stat_cor()
 ```
+
+## Analysis Caption:
+
+This scatter plot shows the distribution of how many incidences are occurring per
