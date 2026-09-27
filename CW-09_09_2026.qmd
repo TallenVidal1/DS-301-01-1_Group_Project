@@ -112,6 +112,8 @@ ggplot(year_df, aes(x = DATA_YEAR, y = COUNT, color = OFFENSE_SUBCAT_NAME)) +
 
 ## Analysis Caption:
 
+This graph is promising, as it shows the relationship between the offense subcategory types over time. We can see a linear growth in both offense types (which overall is not good) however the red line, which represents commercial sex acts has a significantly higher slope than the involuntary servitude offense type. Spending our next project stages honing in on why there is such a big difference in slope is something that our group will definitely look into. Each point on the graph represents the total number of incidences that occurred under that offense subcategory type in that year. This means there are only 2 points every 6 months that are being shown in this graph. I think that this graph could definitely be useful in building our story because it shows the concerning rate of change in both offense subcategory types as time goes on. There is a good chance this visualization will remain a staple of our project and narrative.
+
 ```{r}
 # 1. Prepare sample data
 # Already using df #
@@ -146,4 +148,4 @@ ggplot(df, aes(x = OFFENSE_SUBCAT_NAME, y = ACTUAL_COUNT)) +
 
 ## Analysis Caption:
 
-This scatter plot shows the distribution of how many incidences are occurring per
+This scatter plot shows the distribution of how many incidences are occurring per row of data inside the data set. This visualization also splits filters the data by offense subcategory name. Most of the rows include incidences closer to 10-20 as shown by the density of the points towards the bottom of the graph. This was good practice to work with the data, although at the moment I am unsure of how I would use this to build the narrative for our presentation. I am leaning towards not bringing this visualization forward into future stages of the project process but it is better to have an abundance of visualizations rather than not enough.
