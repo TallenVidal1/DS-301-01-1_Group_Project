@@ -6,7 +6,15 @@ editor: visual
 
 ## Working Document Two
 
-Markdown for the working plots and DS-301 Group Project. Please
+Markdown for the working plots and DS-301 Group Project.
+
+To do end of class 09/28/2026:
+
+Rebuild Research Question
+
+Finish email adaptations from Amber
+
+## PULL FIRST ALWAYS
 
 ## Loading Libraries
 
