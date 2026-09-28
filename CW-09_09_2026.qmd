@@ -28,9 +28,19 @@ df = read.csv("HT_2013-2025.csv")
 
 ```{r}
 #number of each sub offense
-ggplot(data=df, aes(x = OFFENSE_SUBCAT_NAME, fill = ACTUAL_COUNT))+
-geom_bar()
+total <- sum(df$ACTUAL_COUNT, na.rm = TRUE)
 
+df %>%
+  group_by(OFFENSE_SUBCAT_NAME) %>%
+  summarize(total = sum(ACTUAL_COUNT, na.rm = TRUE)) %>%
+  ggplot(aes(x = OFFENSE_SUBCAT_NAME, y = total)) +
+  geom_col(fill = "steelblue") +
+  theme_minimal() +
+  labs(
+    title = "Total Count by Category",
+    x = "Category",
+    y = "Total Count"
+  )
 ```
 
 ## Plot 2
