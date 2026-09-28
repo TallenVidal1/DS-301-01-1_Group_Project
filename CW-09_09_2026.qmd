@@ -71,6 +71,28 @@ ggplot(year, aes(x = DATA_YEAR, y = Value, color = Metric)) +
   theme_minimal()
 ```
 
+```{r}
+zeros <- df %>% filter(ACTUAL_COUNT == 0)
+#unique agencies with 0 in actual count row
+zeros %>%
+  summarise(
+    n_zero_rows = n(),
+    n_agencies  = n_distinct(ORI)
+  )
+
+#agencies that have reported 0 in acutal count by year
+df %>%
+  group_by(DATA_YEAR) %>%
+  summarise(
+    n_agencies      = n_distinct(ORI),
+    n_zero_rows     = sum(ACTUAL_COUNT == 0, na.rm = TRUE),
+    pct_zero        = mean(ACTUAL_COUNT == 0, na.rm = TRUE),
+    total_incidents = sum(ACTUAL_COUNT, na.rm = TRUE)
+  ) %>%
+  arrange(desc(pct_zero))
+
+```
+
 ## Plot 2
 
 ```{r}
