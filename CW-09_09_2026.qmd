@@ -43,6 +43,34 @@ df %>%
   )
 ```
 
+```{r}
+summary <- df %>%
+  group_by(DATA_YEAR) %>%
+  summarise(
+    distinct_agencies = n_distinct(ORI),
+    total_incidents = sum(ACTUAL_COUNT, na.rm = TRUE)
+  )
+
+year <- summary %>%
+  pivot_longer(
+    cols = c(distinct_agencies, total_incidents),
+    names_to = "Metric",
+    values_to = "Value"
+  )
+
+ggplot(year, aes(x = DATA_YEAR, y = Value, color = Metric)) +
+  geom_line(linewidth = 1) +
+  geom_point() +
+  scale_y_log10(labels = scales::comma) +
+  labs(
+    title = "Reporting Agencies vs. Total Incidents by Year",
+    x = "Year",
+    y = "Count (Log Scale)",
+    color = "Metric"
+  ) +
+  theme_minimal()
+```
+
 ## Plot 2
 
 ```{r}
