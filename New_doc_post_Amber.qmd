@@ -1,0 +1,58 @@
+---
+title: "Plot_updates_post_Amber"
+format: html
+editor: visual
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Loading Libraries
+
+Using the libraries from the previous doc.
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(bayesrules)
+library(ggpubr)
+library(plotly)
+library(report)
+```
+
+```{r}
+df = read.csv("HT_2013-2025.csv")
+```
+
+## New Model (From Amber)
+
+```{r}
+# 1. Consistent panel: agencies that reported in every year of the chosen window
+
+start_year <- 2016   # a researcher decision (see below)
+
+window_df <- df |>
+  filter(DATA_YEAR >= start_year)
+
+n_years <- n_distinct(window_df$DATA_YEAR)
+
+panel_agencies <- window_df |>
+  group_by(ORI) |>
+  summarise(years_reported = n_distinct(DATA_YEAR)) |>
+  filter(years_reported == n_years) |>
+  pull(ORI)
+
+panel_df <- window_df |>
+  filter(ORI %in% panel_agencies)
+
+# 2. Yearly totals by subcategory
+yearly <- panel_df |>
+  group_by(DATA_YEAR, OFFENSE_SUBCAT_NAME) |>
+  summarise(total = sum(ACTUAL_COUNT), .groups = "drop")
+
+lm(log(total) ~ DATA_YEAR * OFFENSE_SUBCAT_NAME, data = yearly)
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
