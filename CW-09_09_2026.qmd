@@ -104,6 +104,18 @@ df %>%
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
+```{r}
+df |> 
+  group_by(DATA_YEAR) |> 
+  summarise(total = sum(ACTUAL_COUNT, na.rm = TRUE)) |> 
+  ggplot(aes(x = factor(DATA_YEAR), y = total)) +　#DATA_YEAR is integer
+  geom_col() +
+  labs(x = "Year", y = "Total incidents", 
+       title = "Reported incidents per year") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
 ## Plot 3
 
 ```{r}
@@ -113,6 +125,18 @@ df %>%
   ggplot(aes(x = reorder(STATE_NAME, -n), y = n)) +
   geom_col() +
   labs(x = "State Name", y = "Count", title = "Frequency of State") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r}
+df %>%
+  group_by(STATE_NAME) %>%
+  summarise(total = sum(ACTUAL_COUNT, na.rm = TRUE)) %>%
+  ggplot(aes(x = fct_reorder(STATE_NAME, -total), y = total)) +
+  geom_col() +
+  labs(x = "State", y = "Total incidents", 
+       title = "Reported incidents by state, 2013-2025") +
+  theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
