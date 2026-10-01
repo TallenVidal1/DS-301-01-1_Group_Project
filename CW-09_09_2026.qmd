@@ -45,6 +45,7 @@ df %>%
 
 ```{r}
 summary <- df %>%
+  filter(ACTUAL_COUNT != 0) %>% 
   group_by(DATA_YEAR) %>%
   summarise(
     distinct_agencies = n_distinct(ORI),
@@ -65,7 +66,7 @@ ggplot(year, aes(x = DATA_YEAR, y = Value, color = Metric)) +
   labs(
     title = "Reporting Agencies vs. Total Incidents by Year",
     x = "Year",
-    y = "Count (Log Scale)",
+    y = "Count",
     color = "Metric"
   ) +
   theme_minimal()
@@ -108,12 +109,107 @@ df %>%
 
 ```{r}
 #number of reports in each state
-df %>%
-  count(STATE_NAME) %>%
-  ggplot(aes(x = reorder(STATE_NAME, -n), y = n)) +
+# df %>%
+#   count(STATE_ABBR) %>%
+#   ggplot(aes(x = reorder(STATE_ABBR, -n), y = n)) +
+#   geom_col() +
+#   labs(x = "State", y = "Count", title = "Frequency of State") +
+#   theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+start_year <- 2016   # a researcher decision (see below)
+
+window_df <- df |>
+  filter(DATA_YEAR >= start_year)
+
+n_years <- n_distinct(window_df$DATA_YEAR)
+
+state_counts <- panel_df |>
+  group_by(STATE_NAME) |>
+  summarise(
+    n_rows     = n(),                      # rows (agency-year-offense records)
+    n_agencies = n_distinct(ORI),          # agencies in the balanced panel
+    total_count = sum(ACTUAL_COUNT),       # offenses contributed to the totals
+    .groups = "drop"
+  ) |>
+  arrange(desc(n_rows))
+
+state_counts
+
+# 2. Yearly totals by subcategory
+yearly <- panel_df |>
+  group_by(DATA_YEAR, STATE_NAME, OFFENSE_SUBCAT_NAME) |>
+  summarise(total = sum(ACTUAL_COUNT), .groups = "drop") |>
+  filter(total > 0)   # log(0) is -Inf
+
+yearly$yr <- yearly$DATA_YEAR - start_year
+
+lm(log(total) ~ yr * OFFENSE_SUBCAT_NAME + STATE_NAME, data = yearly)
+
+#model tells us that texas is the main contributer to the data with 9 of there agencies participating in the reports which is vastly more than the other states with the next closest at 3
+```
+
+```{r}
+library(dplyr)
+library(ggplot2)
+
+model <- lm(log(total) ~ yr * OFFENSE_SUBCAT_NAME + STATE_NAME, data = yearly)
+
+cf <- coef(model)
+state_eff <- cf[grepl("^STATE_NAME", names(cf))]
+
+plot_df <- tibble(
+  state = sub("^STATE_NAME", "", names(state_eff)),
+  mult  = exp(state_eff)
+) |>
+  add_row(state = paste0(levels(factor(yearly$STATE_NAME))[1], " (ref)"), mult = 1)
+
+ggplot(plot_df, aes(x = mult, y = reorder(state, mult))) +
+  geom_vline(xintercept = 1, linetype = "dashed") +
+  geom_segment(aes(x = 1, xend = mult, yend = state)) +
+  geom_point(size = 3) +
+  scale_x_log10(breaks = c(0.25, 0.5, 1, 2, 4, 8, 16)) +
+  labs(x = "Amount of reports reletive to log scale", y = NULL,
+       title = "State differences") +
+  theme_minimal()
+```
+
+```{r}
+panel_df |>
+  group_by(STATE_NAME) |>
+  summarise(total = sum(ACTUAL_COUNT)) |>
+  mutate(share = total / sum(total)) |>
+  ggplot(aes(x = share, y = reorder(STATE_NAME, share))) +
   geom_col() +
-  labs(x = "State Name", y = "Count", title = "Frequency of State") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  scale_x_continuous(labels = scales::percent) +
+  labs(x = "Share of all offenses", y = NULL) +
+  theme_minimal()
+```
+
+```{r}
+by_year <- function(data) {
+  data |>
+    filter(ACTUAL_COUNT != 0) |>     # drops zero rows (and NAs)
+    group_by(DATA_YEAR) |>
+    summarise(
+      n_agencies = n_distinct(ORI),
+      total      = sum(ACTUAL_COUNT),
+      .groups = "drop"
+    )
+}
+
+all_states <- by_year(window_df)
+no_texas   <- by_year(window_df |> filter(STATE_NAME != "Texas"))
+
+cor.test(all_states$n_agencies, all_states$total)
+cor.test(no_texas$n_agencies,   no_texas$total)
+
+# state_year <- window_df |>
+#   group_by(STATE_NAME, DATA_YEAR) |>
+#   summarise(n_agencies = n_distinct(ORI), total = sum(ACTUAL_COUNT), .groups = "drop")
+# 
+# state_year |>
+#   group_by(STATE_NAME) |>
+#   summarise(r = cor(n_agencies, total), n_years = n())
 ```
 
 ## Plot 4 - Subcategory
