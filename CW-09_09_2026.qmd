@@ -136,9 +136,9 @@ df %>%
 #| fig-height: 5
 
 df %>%
-  group_by(STATE_NAME) %>%
-  summarise(total = sum(ACTUAL_COUNT, na.rm = TRUE)) %>%
-  slice_max(total, n = 15) %>%
+  group_by(STATE_NAME) |> 
+  summarise(total = sum(ACTUAL_COUNT, na.rm = TRUE)) |> 
+  slice_max(total, n = 15) |> 
   ggplot(aes(x = total, y = fct_reorder(STATE_NAME, total))) +
   geom_col(fill = "steelblue") +
   scale_x_continuous(labels = scales::comma,
@@ -150,17 +150,19 @@ df %>%
   theme_minimal()
 ```
 
+### Incidents vs. reporting agencies by state
+
 ```{r}
 #| fig-width: 10
 #| fig-height: 10
 
 df %>%
-  group_by(STATE_NAME) %>%
-  summarise(Incidents = sum(ACTUAL_COUNT, na.rm = TRUE),
-            `Reporting agencies` = n_distinct(ORI)) %>%
+  group_by(STATE_NAME) |> 
+  summarise(Incidents = sum(ACTUAL_COUNT, na.rm = TRUE), # number of incidents
+            `Reporting agencies` = n_distinct(ORI)) |> # number of reporting agencies
   pivot_longer(c(Incidents, `Reporting agencies`),
-               names_to = "metric", values_to = "value") %>%
-  mutate(STATE_NAME = fct_reorder2(STATE_NAME, metric, value)) %>%
+               names_to = "metric", values_to = "value") |> 
+  mutate(STATE_NAME = fct_reorder2(STATE_NAME, metric, value)) |> 
   ggplot(aes(x = value, y = STATE_NAME)) +
   geom_col(fill = "steelblue") +
   facet_wrap(~ metric, scales = "free_x") +
