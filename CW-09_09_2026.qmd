@@ -27,6 +27,12 @@ df = read.csv("HT_2013-2025.csv")
 ## Plot 1
 
 ```{r}
+ggplot(data=df, aes(x=POPULATION_GROUP_CODE, y=ACTUAL_COUNT, color=(AGENCY_TYPE_NAME)))+
+  geom_point()+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+```{r}
 #number of each sub offense
 total <- sum(df$ACTUAL_COUNT, na.rm = TRUE)
 
