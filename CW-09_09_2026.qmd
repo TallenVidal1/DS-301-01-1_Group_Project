@@ -105,15 +105,18 @@ df %>%
 ```
 
 ```{r}
-df |> 
-  group_by(DATA_YEAR) |> 
-  summarise(total = sum(ACTUAL_COUNT, na.rm = TRUE)) |> 
-  ggplot(aes(x = factor(DATA_YEAR), y = total)) +　#DATA_YEAR is integer
-  geom_col() +
-  labs(x = "Year", y = "Total incidents", 
-       title = "Reported incidents per year") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+df |>
+  group_by(DATA_YEAR) |>
+  summarise(total = sum(ACTUAL_COUNT, na.rm = TRUE)) |>
+  # factor() because DATA_YEAR is an integer: this gives one bar per year
+  # instead of a continuous axis with half-year tick marks
+  ggplot(aes(x = factor(DATA_YEAR), y = total)) +
+  geom_col(fill = "steelblue") +
+  scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.05))) +
+  labs(x = "Year", y = "Total incidents",
+       title = "Reported human trafficking incidents per year",
+       caption = "Source: FBI UCR, 2013-2025") +
+  theme_minimal()
 ```
 
 ## Plot 3
@@ -129,15 +132,42 @@ df %>%
 ```
 
 ```{r}
+#| fig-width: 8
+#| fig-height: 5
+
 df %>%
   group_by(STATE_NAME) %>%
   summarise(total = sum(ACTUAL_COUNT, na.rm = TRUE)) %>%
-  ggplot(aes(x = fct_reorder(STATE_NAME, -total), y = total)) +
-  geom_col() +
-  labs(x = "State", y = "Total incidents", 
-       title = "Reported incidents by state, 2013-2025") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  slice_max(total, n = 15) %>%
+  ggplot(aes(x = total, y = fct_reorder(STATE_NAME, total))) +
+  geom_col(fill = "steelblue") +
+  scale_x_continuous(labels = scales::comma,
+                     expand = expansion(mult = c(0, 0.05))) +
+  labs(x = "Total incidents", y = NULL,
+       title = "Top 15 states by reported incidents, 2013-2025",
+       subtitle = "These 15 states account for 63% of all reported incidents",
+       caption = "Source: FBI UCR") +
+  theme_minimal()
+```
+
+```{r}
+#| fig-width: 10
+#| fig-height: 10
+
+df %>%
+  group_by(STATE_NAME) %>%
+  summarise(Incidents = sum(ACTUAL_COUNT, na.rm = TRUE),
+            `Reporting agencies` = n_distinct(ORI)) %>%
+  pivot_longer(c(Incidents, `Reporting agencies`),
+               names_to = "metric", values_to = "value") %>%
+  mutate(STATE_NAME = fct_reorder2(STATE_NAME, metric, value)) %>%
+  ggplot(aes(x = value, y = STATE_NAME)) +
+  geom_col(fill = "steelblue") +
+  facet_wrap(~ metric, scales = "free_x") +
+  labs(x = NULL, y = NULL,
+       title = "Incidents and reporting agencies by state, 2013-2025",
+       subtitle = "States with more reporting agencies tend to report more incidents") +
+  theme_minimal()
 ```
 
 ## Plot 4 - Subcategory
