@@ -4,9 +4,17 @@ format: html
 editor: visual
 ---
 
-## Quarto
+## Working Document Two
 
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+Markdown for the working plots and DS-301 Group Project.
+
+To do end of class 09/28/2026:
+
+Rebuild Research Question
+
+Finish email adaptations from Amber
+
+## PULL FIRST ALWAYS
 
 ## Loading Libraries
 
