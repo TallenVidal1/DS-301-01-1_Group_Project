@@ -166,7 +166,7 @@ yearly$yr <- yearly$DATA_YEAR - start_year
 
 lm(log(total) ~ yr * OFFENSE_SUBCAT_NAME + STATE_NAME, data = yearly)
 
-#model tells us that texas is the main contributer to the data with 9 of there agencies participating in the reports which is vastly more than the other states with the next closest at 3
+#model tells us that texas is the main contributer to the data with 9 of their agencies participating in the reports which is vastly more than the other states with the next closest at 3
 ```
 
 ```{r}

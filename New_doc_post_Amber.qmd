@@ -62,5 +62,3 @@ yearly <- panel_df |>
 
 lm(log(total) ~ DATA_YEAR * OFFENSE_SUBCAT_NAME, data = yearly)
 ```
-
-The `echo: false` option disables the printing of code (only output is displayed).
