@@ -1,0 +1,302 @@
+---
+title: "301 Map"
+format: html
+editor: visual
+---
+
+```{r}
+library(shiny)
+library(leaflet)
+library(dplyr)
+library(sf)
+library(tigris)
+library(ggplot2)
+
+options(tigris_use_cache = TRUE)
+
+ht <- read.csv("HT_2013-2025.csv", stringsAsFactors = FALSE,
+               na.strings = c("", "NA", "NULL")) |>
+  filter(ACTUAL_COUNT > 0) |>   # drops zero rows
+  mutate(
+    POPULATION_GROUP_CODE = coalesce(POPULATION_GROUP_CODE, "Unknown"),
+    POPULATION_GROUP_DESC = coalesce(POPULATION_GROUP_DESC, "Unknown")
+  )
+
+years <- sort(unique(ht$DATA_YEAR))
+
+pop_lookup <- ht |>
+  distinct(POPULATION_GROUP_CODE, POPULATION_GROUP_DESC) |>
+  arrange(POPULATION_GROUP_CODE)
+pop_choices <- setNames(pop_lookup$POPULATION_GROUP_CODE,
+                        paste(pop_lookup$POPULATION_GROUP_CODE, "-", pop_lookup$POPULATION_GROUP_DESC))
+
+# ploys
+states_sf <- suppressMessages(states(cb = TRUE, resolution = "20m", year = 2022)) |>
+  st_transform(4326)
+
+metric_choices <- c(
+  "Total offenses (actual count)" = "actual",
+  "Number of agencies reporting"  = "n_agencies",
+  "% Commercial Sex Acts"         = "pct_csa",
+  "% Involuntary Servitude"       = "pct_is"
+)
+
+
+fmt <- function(x) prettyNum(x, big.mark = ",")
+
+summarise_states <- function(df) {
+  df |>
+    group_by(STATE_NAME) |>
+    summarise(
+      n_agencies = n_distinct(ORI),
+      actual     = sum(ACTUAL_COUNT),
+      csa        = sum(ACTUAL_COUNT[OFFENSE_SUBCAT_NAME == "Commercial Sex Acts"]),
+      isv        = sum(ACTUAL_COUNT[OFFENSE_SUBCAT_NAME == "Involuntary Servitude"]),
+      .groups = "drop"
+    ) |>
+    mutate(pct_csa = csa / actual * 100,
+           pct_is  = isv / actual * 100)
+}
+
+make_pal <- function(v, diverging) {
+  na_col <- "#d9d9d9"
+  v <- v[is.finite(v)]
+  if (length(v) == 0) v <- c(0, 1)
+  if (diverging) {
+    m <- max(abs(v), 1)
+    return(colorNumeric("RdBu", domain = c(-m, m), reverse = TRUE, na.color = na_col))
+  }
+  rng <- range(v)
+  if (diff(rng) == 0) rng <- rng + c(0, 1)
+  brks <- unique(as.numeric(quantile(v, probs = seq(0, 1, length.out = 6))))
+  if (length(brks) < 3) return(colorNumeric("YlOrRd", domain = rng, na.color = na_col))
+  colorBin("YlOrRd", domain = rng, bins = brks, na.color = na_col)
+}
+
+ui <- fluidPage(
+  tags$style(".leaflet-container { background: #ffffff; }"),
+  titlePanel("Human Trafficking Reports by State"),
+  sidebarLayout(
+    sidebarPanel(
+      width = 3,
+      radioButtons("mode", "View",
+                   c("One year" = "one",
+                     "All years combined" = "all",
+                     "Change between two years" = "chg")),
+      conditionalPanel(
+        "input.mode == 'one'",
+        sliderInput("year", "Year", min = min(years), max = max(years),
+                    value = max(years), step = 1, sep = "",
+                    animate = animationOptions(interval = 1500))
+      ),
+      conditionalPanel(
+        "input.mode == 'chg'",
+        fluidRow(
+          column(6, selectInput("y1", "From", years, selected = min(years))),
+          column(6, selectInput("y2", "To",   years, selected = max(years)))
+        ),
+        helpText("Red = increase, blue = decrease. For the % metrics, change is in percentage points.")
+      ),
+      selectInput("metric", "Color map by", metric_choices),
+      hr(),
+      selectizeInput("agency", "Agency type (blank = all)",
+                     choices = sort(unique(ht$AGENCY_TYPE_NAME)), multiple = TRUE),
+      selectizeInput("pop", "Population group (blank = all)",
+                     choices = pop_choices, multiple = TRUE),
+      hr(),
+      strong("Jump to:"),
+      div(actionButton("v_us", "Contiguous US"),
+          actionButton("v_ak", "Alaska"),
+          actionButton("v_hi", "Hawaii")),
+      br(),
+      helpText("Hover a state for its numbers. Click a state for breakdowns by agency type, ",
+               "population group, and a year-by-year trend."),
+      helpText(textOutput("unmapped"))
+    ),
+    mainPanel(
+      width = 9,
+      leafletOutput("map", height = "560px"),
+      hr(),
+      h4(textOutput("detail_title")),
+      fluidRow(
+        column(6, h5("By agency type"), tableOutput("tbl_type")),
+        column(6, h5("By population group"), tableOutput("tbl_pop"))
+      ),
+      fluidRow(
+        column(6, plotOutput("plot_off", height = "250px")),
+        column(6, plotOutput("plot_ag",  height = "250px"))
+      )
+    )
+  )
+)
+
+server <- function(input, output, session) {
+  
+  #agency-type / population-group filters
+  base <- reactive({
+    d <- ht
+    if (length(input$agency)) d <- filter(d, AGENCY_TYPE_NAME %in% input$agency)
+    if (length(input$pop))    d <- filter(d, POPULATION_GROUP_CODE %in% input$pop)
+    d
+  })
+  
+  map_df <- reactive({
+    d <- base()
+    m <- input$metric
+    
+    if (input$mode %in% c("one", "all")) {
+      if (input$mode == "one") d <- filter(d, DATA_YEAR == input$year)
+      summarise_states(d) |>
+        mutate(
+          value = .data[[m]],
+          label = sprintf(
+            paste0("<b>%s</b><br>Agencies reporting: %s<br>Total offenses: %s",
+                   "<br>Commercial Sex Acts: %s (%.0f%%)",
+                   "<br>Involuntary Servitude: %s (%.0f%%)"),
+            STATE_NAME, fmt(n_agencies), fmt(actual),
+            fmt(csa), pct_csa, fmt(isv), pct_is)
+        )
+    } else {
+      y1 <- as.integer(input$y1); y2 <- as.integer(input$y2)
+      s <- full_join(summarise_states(filter(d, DATA_YEAR == y1)),
+                     summarise_states(filter(d, DATA_YEAR == y2)),
+                     by = "STATE_NAME", suffix = c("_1", "_2"))
+      for (v in c("n_agencies", "actual", "csa", "isv"))
+        for (k in 1:2) {
+          col <- paste0(v, "_", k)
+          s[[col]][is.na(s[[col]])] <- 0
+        }
+      s$value <- s[[paste0(m, "_2")]] - s[[paste0(m, "_1")]]
+      s$label <- sprintf(
+        paste0("<b>%s</b> (%d to %d)",
+               "<br>Agencies reporting: %s to %s (%+.0f)",
+               "<br>Total offenses: %s to %s (%+.0f)",
+               "<br>Commercial Sex Acts: %s to %s",
+               "<br>Involuntary Servitude: %s to %s",
+               "<br>%% Commercial Sex Acts: %.0f%% to %.0f%%"),
+        s$STATE_NAME, y1, y2,
+        fmt(s$n_agencies_1), fmt(s$n_agencies_2), s$n_agencies_2 - s$n_agencies_1,
+        fmt(s$actual_1), fmt(s$actual_2), s$actual_2 - s$actual_1,
+        fmt(s$csa_1), fmt(s$csa_2),
+        fmt(s$isv_1), fmt(s$isv_2),
+        s$pct_csa_1, s$pct_csa_2)
+      s
+    }
+  })
+  
+  # Base map, drawn once
+  output$map <- renderLeaflet({
+    # No basemap tiles: the state polygons are the map, so no tile provider
+    # (and no API key) is needed.
+    leaflet(options = leafletOptions(minZoom = 2)) |>
+      setView(-96, 38, 4)
+  })
+  
+  # Redraw state shapes whenever the data or controls change
+  observe({
+    s   <- map_df()
+    shp <- left_join(states_sf, s, by = c("NAME" = "STATE_NAME"))
+    no_data <- is.na(shp$label)
+    shp$label[no_data] <- paste0("<b>", shp$NAME[no_data], "</b><br>No data")
+    
+    pal <- make_pal(shp$value, diverging = input$mode == "chg")
+    legend_title <- names(metric_choices)[metric_choices == input$metric]
+    if (input$mode == "chg") legend_title <- paste("Change:", legend_title)
+    
+    leafletProxy("map", data = shp) |>
+      clearShapes() |>
+      clearControls() |>
+      addPolygons(
+        layerId = ~NAME,
+        fillColor = ~pal(value), fillOpacity = 0.8,
+        color = "white", weight = 1,
+        label = lapply(shp$label, HTML),
+        highlightOptions = highlightOptions(weight = 2, color = "#333333", bringToFront = TRUE)
+      ) |>
+      addLegend("bottomright", pal = pal, values = ~value,
+                title = legend_title, na.label = "No data", opacity = 0.8)
+  })
+  
+  observeEvent(input$v_us, leafletProxy("map") |> setView(-96, 38, 4))
+  observeEvent(input$v_ak, leafletProxy("map") |> setView(-150, 64, 3))
+  observeEvent(input$v_hi, leafletProxy("map") |> setView(-157.5, 20.5, 6))
+  
+  # Agencies that can't be placed on a state map (e.g. "Federal")
+  output$unmapped <- renderText({
+    off <- base() |>
+      filter(!STATE_NAME %in% states_sf$NAME) |>
+      group_by(STATE_NAME) |>
+      summarise(n = sum(ACTUAL_COUNT), .groups = "drop")
+    if (nrow(off) == 0) return("")
+    paste0("Not on the map (all years): ",
+           paste0(off$STATE_NAME, " (", fmt(off$n), " offenses)", collapse = ", "), ".")
+  })
+  
+  selected <- reactiveVal(NULL)
+  observeEvent(input$map_shape_click, selected(input$map_shape_click$id))
+  
+  detail_df <- reactive({
+    req(selected())
+    d <- filter(ht, STATE_NAME == selected())
+    if (input$mode == "one") d <- filter(d, DATA_YEAR == input$year)
+    d
+  })
+  
+  output$detail_title <- renderText({
+    if (is.null(selected())) return("Click a state on the map for details")
+    period <- if (input$mode == "one") input$year else "all years"
+    paste0(selected(), " (", period, ", all agency types and population groups)")
+  })
+  
+  output$tbl_type <- renderTable({
+    detail_df() |>
+      group_by(`Agency type` = AGENCY_TYPE_NAME) |>
+      summarise(Agencies = n_distinct(ORI),
+                Offenses = sum(ACTUAL_COUNT),
+                `Comm. Sex Acts` = sum(ACTUAL_COUNT[OFFENSE_SUBCAT_NAME == "Commercial Sex Acts"]),
+                `Invol. Servitude` = sum(ACTUAL_COUNT[OFFENSE_SUBCAT_NAME == "Involuntary Servitude"]),
+                .groups = "drop") |>
+      arrange(desc(Offenses))
+  }, striped = TRUE, digits = 0)
+  
+  output$tbl_pop <- renderTable({
+    detail_df() |>
+      group_by(Code = POPULATION_GROUP_CODE, Description = POPULATION_GROUP_DESC) |>
+      summarise(Agencies = n_distinct(ORI),
+                Offenses = sum(ACTUAL_COUNT),
+                .groups = "drop") |>
+      arrange(desc(Offenses))
+  }, striped = TRUE, digits = 0)
+  
+  state_trend <- reactive({
+    req(selected())
+    filter(ht, STATE_NAME == selected())
+  })
+  
+  output$plot_off <- renderPlot({
+    state_trend() |>
+      group_by(DATA_YEAR, OFFENSE_SUBCAT_NAME) |>
+      summarise(offenses = sum(ACTUAL_COUNT), .groups = "drop") |>
+      ggplot(aes(DATA_YEAR, offenses, color = OFFENSE_SUBCAT_NAME)) +
+      geom_line(linewidth = 1) + geom_point() +
+      scale_x_continuous(breaks = years) +
+      labs(title = "Offenses by year", x = NULL, y = "Actual count", color = NULL) +
+      theme_minimal() +
+      theme(legend.position = "bottom", axis.text.x = element_text(angle = 45, hjust = 1))
+  })
+  
+  output$plot_ag <- renderPlot({
+    state_trend() |>
+      group_by(DATA_YEAR) |>
+      summarise(agencies = n_distinct(ORI), .groups = "drop") |>
+      ggplot(aes(DATA_YEAR, agencies)) +
+      geom_line(linewidth = 1) + geom_point() +
+      scale_x_continuous(breaks = years) +
+      labs(title = "Agencies reporting by year", x = NULL, y = "Agencies") +
+      theme_minimal() +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  })
+}
+
+shinyApp(ui, server)
+```
