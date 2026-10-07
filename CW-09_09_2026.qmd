@@ -368,3 +368,16 @@ ggplot(df, aes(x = OFFENSE_SUBCAT_NAME, y = ACTUAL_COUNT)) +
 ## Analysis Caption:
 
 This scatter plot shows the distribution of how many incidences are occurring per row of data inside the data set. This visualization also splits filters the data by offense subcategory name. Most of the rows include incidences closer to 10-20 as shown by the density of the points towards the bottom of the graph. This was good practice to work with the data, although at the moment I am unsure of how I would use this to build the narrative for our presentation. I am leaning towards not bringing this visualization forward into future stages of the project process but it is better to have an abundance of visualizations rather than not enough.
+
+## Bar Plot for Presentation
+
+```{r}
+ggplot(df, aes(x = AGENCY_TYPE_NAME, y = ACTUAL_COUNT)) +
+  geom_col(fill = "steelblue") +
+  theme_minimal() +
+  labs(
+    title = "Total Incident Count by Agency Type",
+    x = "Agency Type",
+    y = "Total Count"
+  )
+```
