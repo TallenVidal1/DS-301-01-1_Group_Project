@@ -382,8 +382,7 @@ ggplot(df, aes(x = AGENCY_TYPE_NAME, y = ACTUAL_COUNT)) +
   )
 ```
 
-<<<<<<< HEAD
-## Claude Modification
+## Claude Modifications
 
 ```{r}
 library(tidyverse)
@@ -410,43 +409,4 @@ df %>%
     axis.text = element_text(color = "grey20"),
     axis.title.x = element_text(margin = margin(t = 10))
   )
-=======
-### Nevada: which agencies, how many incidents each  
-
-```{r}
-library(tidyverse)
-
-# Nevada: which agencies, how many incidents each
-nevada <- df |> 
-  filter(STATE_NAME == "Nevada") |> 
-  group_by(PUB_AGENCY_NAME, COUNTY_NAME) %>%
-  summarise(incidents = sum(ACTUAL_COUNT, na.rm = TRUE), .groups = "drop")  |> 
-  arrange(desc(incidents)) |> 
-  mutate(share = round(100 * incidents / sum(incidents), 0)) |> 
-  select(Agency = PUB_AGENCY_NAME, 
-         Incidents = incidents, 
-         'Share (%)' = share)
-
-nevada
-```
-
-```{r}
-coverage <- df |> 
-  group_by(DATA_YEAR)  |> 
-  summarise(
-    agencies  = n_distinct(ORI),
-    states    = n_distinct(STATE_NAME[!STATE_NAME %in% c("Federal", "Guam")]),
-    incidents = sum(ACTUAL_COUNT, na.rm = TRUE)
-  ) |> 
-  filter(DATA_YEAR %in% c(2013, 2025))
-
-coverage
-```
-
-```{r}
-df %>%
-  filter(STATE_NAME == "Texas") %>%
-  group_by(AGENCY_TYPE_NAME) %>%
-  summarise(agencies = n_distinct(ORI))
->>>>>>> d122d75422e9593d30b675c62c59460db3f4d848
 ```
