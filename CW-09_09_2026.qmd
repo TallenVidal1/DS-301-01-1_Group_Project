@@ -381,3 +381,32 @@ ggplot(df, aes(x = AGENCY_TYPE_NAME, y = ACTUAL_COUNT)) +
     y = "Total Count"
   )
 ```
+
+## Claude Modification
+
+```{r}
+library(tidyverse)
+library(scales)
+
+df %>%
+  group_by(AGENCY_TYPE_NAME) %>%
+  summarise(total = sum(ACTUAL_COUNT, na.rm = TRUE)) %>%
+  ggplot(aes(x = reorder(AGENCY_TYPE_NAME, total), y = total)) +
+  geom_col(fill = "#2C7FB8", width = 0.7) +
+  geom_text(aes(label = comma(total)), hjust = -0.1, size = 3.5, color = "grey30") +
+  coord_flip() +
+  scale_y_continuous(labels = comma, expand = expansion(mult = c(0, 0.12))) +
+  labs(
+    title = "Total Incident Count by Agency Type",
+    x = NULL,
+    y = "Total Incidents"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(face = "bold", size = 16),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.text = element_text(color = "grey20"),
+    axis.title.x = element_text(margin = margin(t = 10))
+  )
+```
