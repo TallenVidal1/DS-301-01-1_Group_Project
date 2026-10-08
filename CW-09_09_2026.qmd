@@ -27,6 +27,12 @@ df = read.csv("HT_2013-2025.csv")
 ## Plot 1
 
 ```{r}
+ggplot(data = df, aes(x = STATE_NAME, y=ACTUAL_COUNT,fill = POPULATION_GROUP_CODE)) +
+  geom_col() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+```{r}
 ggplot(data = df, aes(x = POPULATION_GROUP_CODE, y = ACTUAL_COUNT, fill = OFFENSE_SUBCAT_NAME)) +
   geom_col() +
   labs(title = "Incident Count by Population Type ", x = " Population Group Code", y = "Incident Count" )
