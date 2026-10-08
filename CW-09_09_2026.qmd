@@ -413,3 +413,10 @@ coverage <- df |>
 
 coverage
 ```
+
+```{r}
+df %>%
+  filter(STATE_NAME == "Texas") %>%
+  group_by(AGENCY_TYPE_NAME) %>%
+  summarise(agencies = n_distinct(ORI))
+```
